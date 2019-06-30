@@ -91,7 +91,7 @@ public abstract class ServerRMI extends UnicastRemoteObject{
 	 * @throws MalformedURLException if the name is not an appropriately formatted URL
 	 */
 	public void open() throws RemoteException, MalformedURLException {
-		log("Server opened on the port " + this.port);
+		log(this.name + " opened on the port " + this.port);
 		registry = LocateRegistry.createRegistry(this.port);
 		Naming.rebind(ServiceRMI.getUrl(name, ip, port), this);
 	}
