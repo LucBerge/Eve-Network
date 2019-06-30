@@ -8,7 +8,7 @@ public class Chat {
 
 	public static void main(String[] args) {
 		try {
-			Client client = new Client("EveClient", 5002, "client.eve", new EventListener() {
+			Client client = new Client("EveClient", 5001, "client.eve", new EventListener() {
 				public void eventReceived(String event) {
 					System.out.println(event);
 				}
