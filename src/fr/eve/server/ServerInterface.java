@@ -32,7 +32,7 @@ public interface ServerInterface extends java.rmi.Remote {
 	public void notifyEvent(String event) throws RemoteException, ServerNotActiveException;
 
 	/** Notify the client of an event.
-	 * @param event - Event to notify.
+	 * @param lastEvent - Event to notify.
 	 * @return List of new events.
 	 * @throws RemoteException if the registry could not be exported or contacted.
 	 * @throws InterruptedException if any thread interrupted the current thread.

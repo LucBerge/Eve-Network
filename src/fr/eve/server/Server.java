@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Properties;
 
 import fr.eve.dao.EventsDAO;
+import fr.eve.example.Example;
 import fr.rmi.ServerRMI;
 
 /** The {@code Server} class is used to manage Eve servers.<br><br>
@@ -21,15 +22,19 @@ public class Server extends ServerRMI implements ServerInterface {
 	
 	public static void main(String args[]) {
 		try {	
-			Properties properties = new Properties();
-			properties.load(new FileInputStream("eve.server.properties"));
-			String name = properties.getProperty("name");
-			int port = Integer.parseInt(properties.getProperty("port"));
-			String initialFileName = properties.getProperty("initialFileName");
-			String eventFileName = properties.getProperty("eventFileName");
-			
-			Server server = new Server(name, port, initialFileName, eventFileName);
-			server.open();
+			if(args.length != 0)
+				Example.parse(args);
+			else {
+				Properties properties = new Properties();
+				properties.load(new FileInputStream("eve.server.properties"));
+				String name = properties.getProperty("name");
+				int port = Integer.parseInt(properties.getProperty("port"));
+				String initialFileName = properties.getProperty("initialFileName");
+				String eventFileName = properties.getProperty("eventFileName");
+				
+				Server server = new Server(name, port, initialFileName, eventFileName);
+				server.open();
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
