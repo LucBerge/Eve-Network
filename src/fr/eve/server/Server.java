@@ -3,15 +3,14 @@ package fr.eve.server;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.net.MalformedURLException;
-import java.rmi.Naming;
-import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
+import java.rmi.server.ServerNotActiveException;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Properties;
 
-import fr.eve.client.ClientInterface;
 import fr.eve.dao.EventsDAO;
 import fr.rmi.ServerRMI;
 
@@ -45,8 +44,8 @@ public class Server extends ServerRMI implements ServerInterface {
 	private String initialFileName;
 	private String eventFileName;
 	
-	private HashMap<String, ClientInterface> users;
-	private List<String> events;
+	private HashMap<String, String> users;
+	private List<Event> events;
 	
 	/*************/
 	/** BUILDER **/
@@ -65,7 +64,7 @@ public class Server extends ServerRMI implements ServerInterface {
 		this.initialFileName = initialFileName;
 		this.eventFileName = eventFileName;
 		
-		users = new HashMap<String, ClientInterface>();
+		users = new HashMap<String, String>();
 		events = new EventsDAO(eventFileName).find();
 	}
 
@@ -76,26 +75,16 @@ public class Server extends ServerRMI implements ServerInterface {
 	/* (non-Javadoc)
 	 * @see fr.eve.ServerInterface#connect(java.lang.String, int)
 	 */
-	public void connect(String url, int lastEventIndex) throws RemoteException, AlreadyConnectedException, MalformedURLException, NotBoundException {
-		if(users.containsKey(url))
-			throw new AlreadyConnectedException();
-		
+	public String connect() throws RemoteException, AlreadyConnectedException, ServerNotActiveException {
+		String ip = getClientHost();
 		synchronized(users) {
-			users.put(url, (ClientInterface) Naming.lookup(url));
-			
-			if (lastEventIndex < events.size()) {
-				log(url + " is now connected to the network with " + (events.size() - lastEventIndex) + " events late.");
-				for(String event:events.subList(lastEventIndex, events.size()))
-					users.get(url).notifyEvent(event);
-			}
-			else if (lastEventIndex > events.size()) {
-				//error = Client in advance on the server
-				log(url + " is now connected to the network but in advance on the server.");
-			}
-			else {
-				log(url + " is now connected to the network and up to date.");
-			}
+			if(users.containsKey(ip))
+				throw new AlreadyConnectedException();
+
+			users.put(ip, ip);
 		}
+		log(ip + " joined the network.");
+		return ip;
 	}
 
 	/* (non-Javadoc)
@@ -107,39 +96,66 @@ public class Server extends ServerRMI implements ServerInterface {
 		else
 			return new File(initialFileName);
 	}
-
+	
 	/* (non-Javadoc)
 	 * @see fr.eve.ServerInterface#notifyEvent(java.lang.String, java.lang.String)
 	 */
-	public void notifyEvent(String url, String event) throws RemoteException{
-		synchronized(events){
+	public void notifyEvent(String e) throws RemoteException, ServerNotActiveException{
+		String ip = getClientHost();
+		synchronized(events) {
+			Event event = new Event(ip, LocalDateTime.now(), e);
+			event.setIndex(events.size());
 			events.add(event);
 		}
-		for(String user:users.keySet()) {
-			if(!user.equals(url)) {
-				users.get(user).notifyEvent(event);
-				log(event + " sent to " + user + ".");
+		synchronized(users) {
+			for(String user:users.keySet()) {
+				synchronized(users.get(user)){
+					users.get(user).notifyAll();
+				}
+			}
+			log(ip + " added \"" + e + "\".");
+		}
+	}
+	
+	/* (non-Javadoc)
+	 * @see fr.eve.server.ServerInterface#getEvents(java.lang.String, int)
+	 */
+	public List<Event> getEvents(Event lastEvent) throws RemoteException, InterruptedException, ServerNotActiveException {
+		if(lastEvent == null)
+			return events;
+		
+		if(lastEvent.getIndex()+1 == events.size()) {			
+			String ip = getClientHost();
+			synchronized(users.get(ip)) {
+				users.get(ip).wait();
 			}
 		}
-		log(url + " added \"" + event + "\".");
+		synchronized(events) {
+			return new ArrayList<Event>(events.subList(lastEvent.getIndex()+1, events.size()));
+		}
 	}
 	
 	/* (non-Javadoc)
 	 * @see fr.eve.ServerInterface#disconnect(java.lang.String)
 	 */
-	public void disconnect(String url) throws RemoteException {
+	public void disconnect() throws RemoteException, ServerNotActiveException {
+		String ip = getClientHost();
 		synchronized(users) {
-			users.remove(url);
-			log(url + " disconnected.");
-			if(users.isEmpty())
+			synchronized(users.get(ip)) {
+				users.get(ip).notifyAll();
+			}
+			users.remove(ip);
+			log(ip + " disconnected.");
+			if(users.isEmpty()) {
 				try {
 					synchronized(events) {
 						new EventsDAO(this.eventFileName).update(events);
-						log("Events saved.");
 					}
+					log("Events saved.");
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
+			}
 		}
 	}
 }

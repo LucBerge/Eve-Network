@@ -8,12 +8,11 @@ public class Chat {
 
 	public static void main(String[] args) {
 		try {
-			Client client = new Client("EveClient", 5001, "client.eve", new EventListener() {
+			Client client = new Client("client.eve", new EventListener() {
 				public void eventReceived(String event) {
 					System.out.println(event);
 				}
 			});
-			client.getListener().setLogStatus(false);
 
 			System.out.print("Server name : ");
 			String name = ServiceRMI.readKeyboard(false);
@@ -23,9 +22,8 @@ public class Chat {
 			int port = Integer.parseInt(ServiceRMI.readKeyboard(false));
 
 			System.out.println("[Chat opened]");
-			for(String event:client.getListener().getEvents())
-				System.out.println(event);
 			client.connect(name, ip, port);
+			client.start();
 
 			String event;
 			while(true) {
