@@ -35,8 +35,6 @@ public class Client extends Thread{
 	/*************/
 
 	/** Builder of the {@code Client} class.
-	 * @param name - Client name.
-	 * @param port - Client port.
 	 * @param eventFileName - The event file in which store all the events.
 	 * @param eventListener - Method called when a new event occurs.
 	 * @throws IOException if an I/O error occurs.

@@ -10,7 +10,6 @@ import java.util.List;
 public interface ServerInterface extends java.rmi.Remote {
 	
 	/** Notify the server for a new user on the network.
-	 * @param lastEvent - The last event that happened for the client.
 	 * @return The client ip.
 	 * @throws RemoteException if the registry could not be exported or contacted.
 	 * @throws AlreadyConnectedException if the user is already connected to the network.
