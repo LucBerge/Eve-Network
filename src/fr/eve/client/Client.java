@@ -1,12 +1,17 @@
 package fr.eve.client;
 
+import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.rmi.Naming;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.server.ServerNotActiveException;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 import fr.eve.dao.EventDAO;
 import fr.eve.server.AlreadyConnectedException;
@@ -107,8 +112,22 @@ public class Client extends Thread{
 	 * @return Initial file.
 	 * @throws RemoteException if the registry could not be exported or contacted.
 	 */
-	public File getInitialFile() throws RemoteException{
-		return server.getInitialFile();
+	public File getInitialFile(String destination) throws RemoteException{
+		String fileName = server.getInitialFileName();
+		if(fileName == null)
+			return null;
+
+		try {
+			byte[] data = server.getInitialFile();
+			File file = new File(destination, fileName);
+			BufferedOutputStream output = new BufferedOutputStream(new FileOutputStream(file.getName()));
+			output.write(data,0,data.length);
+			output.flush();
+			output.close();
+			return file;
+		} catch (IOException e) {
+			return null;
+		}
 	}
 	
 	/** Notify the server of an event.

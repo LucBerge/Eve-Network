@@ -1,7 +1,9 @@
 package fr.eve.server;
 
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.rmi.RemoteException;
 import java.rmi.server.ServerNotActiveException;
@@ -46,7 +48,7 @@ public class Server extends ServerRMI implements ServerInterface {
 	/** ATTRIBUTS **/
 	/***************/
 
-	private String initialFileName;
+	private File initialFile;
 	private String eventFileName;
 	
 	private HashMap<String, String> users;
@@ -66,7 +68,7 @@ public class Server extends ServerRMI implements ServerInterface {
 	 */
 	public Server(String name, int port, String initialFileName, String eventFileName) throws ClassNotFoundException, IOException {
 		super(name, port);
-		this.initialFileName = initialFileName;
+		this.initialFile = initialFileName.isEmpty() ? null : new File(initialFileName);
 		this.eventFileName = eventFileName;
 		
 		users = new HashMap<String, String>();
@@ -93,13 +95,45 @@ public class Server extends ServerRMI implements ServerInterface {
 	}
 
 	/* (non-Javadoc)
+	 * @see fr.eve.ServerInterface#getInitialFileName()
+	 */
+	public String getInitialFileName() throws RemoteException{
+		return initialFile == null ? null : initialFile.getName();
+	}
+	
+	/* (non-Javadoc)
 	 * @see fr.eve.ServerInterface#getInitialFile()
 	 */
-	public File getInitialFile() throws RemoteException{
-		if(initialFileName == null)
+	public byte[] getInitialFile() throws RemoteException{
+		try {
+			byte buffer[] = new byte[(int) initialFile.length()];
+			BufferedInputStream input;
+			input = new	BufferedInputStream(new FileInputStream(initialFile));
+			input.read(buffer,0,buffer.length);
+			input.close();
+			return(buffer);
+		} catch (IOException e) {
 			return null;
-		else
-			return new File(initialFileName);
+		}
+	}
+
+	/* (non-Javadoc)
+	 * @see fr.eve.ServerInterface#getInitialFile()
+	 */
+	public void getInitialFile(FileOutputStream out) throws RemoteException{
+		try {
+			FileInputStream in = new FileInputStream(initialFile);
+			int read, offset = 0, len = 2048;
+			byte[] buffer = new byte[len];
+			while((read = in.read(buffer, offset, len)) != -1) {
+				out.write(buffer, offset, len);
+				offset += read;
+			}
+			in.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
 	}
 	
 	/* (non-Javadoc)

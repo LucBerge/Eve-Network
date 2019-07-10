@@ -91,9 +91,9 @@ public abstract class ServerRMI extends UnicastRemoteObject{
 	 * @throws MalformedURLException if the name is not an appropriately formatted URL
 	 */
 	public void open() throws RemoteException, MalformedURLException {
-		log("Server opened (Name : " + this.name + ", Ip : " + this.ip + ", Port : " +  this.port + ")");
 		registry = LocateRegistry.createRegistry(this.port);
 		Naming.rebind(ServiceRMI.getUrl(name, ip, port), this);
+		log("Server opened (Name : " + this.name + ", Ip : " + this.ip + ", Port : " +  this.port + ")");
 	}
 
 	/**
@@ -102,9 +102,9 @@ public abstract class ServerRMI extends UnicastRemoteObject{
 	 * @throws AccessException if this registry is local and it denies the caller access to perform this operation.
 	 */
 	public void close() throws AccessException, RemoteException, NotBoundException {
-		log("Server closed");
 		registry.unbind(this.name);
         UnicastRemoteObject.unexportObject(this, true);
+        log("Server closed");
 	}
 
 	/*********/
