@@ -1,6 +1,5 @@
 package fr.eve.server;
 
-import java.io.File;
 import java.rmi.RemoteException;
 import java.rmi.server.ServerNotActiveException;
 import java.util.List;
@@ -16,12 +15,18 @@ public interface ServerInterface extends java.rmi.Remote {
 	 * @throws ServerNotActiveException if no remote method invocation is being processed in the current thread.
 	 */
 	public String connect() throws RemoteException, AlreadyConnectedException, ServerNotActiveException;
-	
-	/** Get the initial file.
-	 * @return Initial file.
+
+	/** Get the initial file name.
+	 * @return Initial file name. {@code null} if there is no initial file.
 	 * @throws RemoteException if the registry could not be exported or contacted.
 	 */
-	public File getInitialFile() throws RemoteException;
+	public String getInitialFileName() throws RemoteException;
+	
+	/** Get the initial file data.
+	 * @return Initial file data. {@code null} if there is no initial file.
+	 * @throws RemoteException if the registry could not be exported or contacted.
+	 */
+	public byte[] getInitialFile() throws RemoteException;
 	
 	/** Notify the client of an event.
 	 * @param event - Event to notify.
