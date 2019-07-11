@@ -3,7 +3,6 @@ package fr.eve.server;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.rmi.RemoteException;
 import java.rmi.server.ServerNotActiveException;
@@ -28,7 +27,7 @@ public class Server extends ServerRMI implements ServerInterface {
 				Example.parse(args);
 			else {
 				Properties properties = new Properties();
-				properties.load(new FileInputStream("eve.server.properties"));
+				properties.load(new FileInputStream("server.properties"));
 				String name = properties.getProperty("name");
 				int port = Integer.parseInt(properties.getProperty("port"));
 				String initialFileName = properties.getProperty("initialFileName");
@@ -48,7 +47,7 @@ public class Server extends ServerRMI implements ServerInterface {
 	/** ATTRIBUTS **/
 	/***************/
 
-	private File initialFile;
+	private List<String> initialFiles;
 	private String eventFileName;
 	
 	private HashMap<String, String> users;
@@ -68,13 +67,39 @@ public class Server extends ServerRMI implements ServerInterface {
 	 */
 	public Server(String name, int port, String initialFileName, String eventFileName) throws ClassNotFoundException, IOException {
 		super(name, port);
-		this.initialFile = initialFileName.isEmpty() ? null : new File(initialFileName);
 		this.eventFileName = eventFileName;
+		this.initialFiles = new ArrayList<String>();
 		
 		users = new HashMap<String, String>();
 		events = new EventsDAO(eventFileName).find();
+
+		if(!initialFileName.isEmpty()) {
+			File initialFile = new File(initialFileName);
+			if(initialFile.exists()) {
+				if(initialFile.isFile())
+					this.initialFiles.add(initialFileName);
+				else {
+					this.initialFiles.addAll(getFilesInDirectory(initialFile));
+				}
+			}
+		}
 	}
 
+	/*********************/
+	/** PRIVATE METHODS **/
+	/*********************/
+	
+	private List<String> getFilesInDirectory(File directory){
+		List<String> files = new ArrayList<String>();
+		for(File file:directory.listFiles()) {
+			if(file.isFile())
+				files.add(file.getPath());
+			else
+				files.addAll(getFilesInDirectory(file));
+		}
+		return files;
+	}
+	
 	/********************/
 	/** PUBLIC METHODS **/
 	/********************/
@@ -97,14 +122,17 @@ public class Server extends ServerRMI implements ServerInterface {
 	/* (non-Javadoc)
 	 * @see fr.eve.ServerInterface#getInitialFileName()
 	 */
-	public String getInitialFileName() throws RemoteException{
-		return initialFile == null ? null : initialFile.getName();
+	public List<String> getInitialFiles() throws RemoteException{
+		return this.initialFiles;
 	}
 	
 	/* (non-Javadoc)
 	 * @see fr.eve.ServerInterface#getInitialFile()
 	 */
-	public byte[] getInitialFile() throws RemoteException{
+	public byte[] getInitialFile(String fileName) throws RemoteException{
+		if(!this.initialFiles.contains(fileName))
+			return null;
+		File initialFile = new File(fileName);
 		try {
 			byte buffer[] = new byte[(int) initialFile.length()];
 			BufferedInputStream input;
@@ -115,25 +143,6 @@ public class Server extends ServerRMI implements ServerInterface {
 		} catch (IOException e) {
 			return null;
 		}
-	}
-
-	/* (non-Javadoc)
-	 * @see fr.eve.ServerInterface#getInitialFile()
-	 */
-	public void getInitialFile(FileOutputStream out) throws RemoteException{
-		try {
-			FileInputStream in = new FileInputStream(initialFile);
-			int read, offset = 0, len = 2048;
-			byte[] buffer = new byte[len];
-			while((read = in.read(buffer, offset, len)) != -1) {
-				out.write(buffer, offset, len);
-				offset += read;
-			}
-			in.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		
 	}
 	
 	/* (non-Javadoc)
