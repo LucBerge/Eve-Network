@@ -67,11 +67,12 @@ public class Example {
 		client.start();
 		File file = client.getInitialFile(".");
 		client.disconnect();
+
 		if(file == null)
 			System.out.println("There is no initial file to download.");
-		else {
-			file.createNewFile();
+		else if(file.isFile())
 			System.out.println("Initial file downloaded : " + file.getName());
-		}
+		else
+			System.out.println("Initial directory downloaded : " + file.getName());
 	}
 }

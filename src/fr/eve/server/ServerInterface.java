@@ -16,17 +16,18 @@ public interface ServerInterface extends java.rmi.Remote {
 	 */
 	public String connect() throws RemoteException, AlreadyConnectedException, ServerNotActiveException;
 
-	/** Get the initial file name.
-	 * @return Initial file name. {@code null} if there is no initial file.
+	/** Get the initial files name.
+	 * @return Initial files name.
 	 * @throws RemoteException if the registry could not be exported or contacted.
 	 */
-	public String getInitialFileName() throws RemoteException;
+	public List<String> getInitialFiles() throws RemoteException;
 	
 	/** Get the initial file data.
-	 * @return Initial file data. {@code null} if there is no initial file.
+	 * @param fileName - The name of the file to download.
+	 * @return Initial file data, {@code null} if the file does not exist.
 	 * @throws RemoteException if the registry could not be exported or contacted.
 	 */
-	public byte[] getInitialFile() throws RemoteException;
+	public byte[] getInitialFile(String fileName) throws RemoteException;
 	
 	/** Notify the client of an event.
 	 * @param event - Event to notify.
