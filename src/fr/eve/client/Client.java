@@ -177,6 +177,8 @@ public class Client{
 	}
 	
 	public void join() throws RemoteException, AlreadyConnectedException, ServerNotActiveException {
+		this.ip = this.server.connect();
+		connected = true;
 		Thread listener = new Thread(new Runnable() {
 			public void run() {
 				try {
@@ -192,8 +194,6 @@ public class Client{
 				}
 			}
 		});
-		this.server.connect();
-		connected = true;
 		listener.start();
 	}
 }
