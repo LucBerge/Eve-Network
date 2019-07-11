@@ -51,7 +51,7 @@ public class Example {
 	public static void chat() throws Exception {
 		Client client = getClient();
 		System.out.println("------------------");
-		client.start();
+		client.join();
 
 		String event;
 		while(true) {
@@ -64,7 +64,7 @@ public class Example {
 
 	public static void file() throws Exception {
 		Client client = getClient();
-		client.start();
+		client.join();
 		File file = client.getInitialFile(".");
 		client.disconnect();
 
