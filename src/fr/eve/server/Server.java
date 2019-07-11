@@ -186,9 +186,12 @@ public class Server extends ServerRMI implements ServerInterface {
 	/* (non-Javadoc)
 	 * @see fr.eve.ServerInterface#disconnect(java.lang.String)
 	 */
-	public void disconnect() throws RemoteException, ServerNotActiveException {
+	public void disconnect() throws RemoteException, ServerNotActiveException, AlreadyDisconnectedException {
 		String ip = getClientHost();
 		synchronized(users) {
+			if(!users.containsKey(ip))
+				throw new AlreadyDisconnectedException();
+			
 			synchronized(users.get(ip)) {
 				users.get(ip).notifyAll();
 			}

@@ -49,6 +49,7 @@ public interface ServerInterface extends java.rmi.Remote {
 	/** Notify the server for a user disconnection on the network.
 	 * @throws RemoteException if the registry could not be exported or contacted.
 	 * @throws ServerNotActiveException if no remote method invocation is being processed in the current thread.
+	 * @throws AlreadyDisconnectedException if the user is already disconnected from the network.
 	 */
-	public void disconnect() throws RemoteException, ServerNotActiveException;
+	public void disconnect() throws RemoteException, ServerNotActiveException, AlreadyDisconnectedException;
 }
