@@ -39,6 +39,7 @@ public abstract class ServerRMI extends UnicastRemoteObject{
 	 * @throws UnknownHostException if the local host name could not be resolved into an address.
 	 */
 	public ServerRMI(String name, int port) throws UnknownHostException, RemoteException {
+		super(port);
 		System.setProperty("java.security.policy", "file:rmi.policy");
 		if (System.getSecurityManager() == null)
 			System.setSecurityManager(new SecurityManager());

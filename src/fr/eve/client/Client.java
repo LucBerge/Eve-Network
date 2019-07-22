@@ -181,16 +181,16 @@ public class Client{
 		connected = true;
 		Thread listener = new Thread(new Runnable() {
 			public void run() {
-				try {
-					while(connected) {
+				while(connected) {
+					try {
 						for(Event event:server.getEvents(lastEvent)){
 							lastEvent = event;
 							if(!event.getAuthor().equals(ip))
 								eventListener.eventReceived(event.getEvent());
 						}
+					} catch (RemoteException | InterruptedException | ServerNotActiveException e) {
+						e.printStackTrace();
 					}
-				} catch (RemoteException | InterruptedException | ServerNotActiveException e) {
-					e.printStackTrace();
 				}
 			}
 		});
