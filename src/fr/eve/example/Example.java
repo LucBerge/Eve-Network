@@ -4,7 +4,7 @@ import java.io.File;
 
 import fr.eve.client.Client;
 import fr.eve.client.EventListener;
-import fr.rmi.ServiceRMI;
+import fr.eve.utils.Service;
 
 public class Example {
 
@@ -37,12 +37,12 @@ public class Example {
 			}
 		});
 
-		System.out.print("Server name : ");
-		String name = ServiceRMI.readKeyboard(false);
 		System.out.print("Server ip : ");
-		String ip = ServiceRMI.readKeyboard(false);
+		String ip = Service.readKeyboard(false);
 		System.out.print("Server port : ");
-		int port = Integer.parseInt(ServiceRMI.readKeyboard(false));
+		int port = Integer.parseInt(Service.readKeyboard(false));
+		System.out.print("Server name : ");
+		String name = Service.readKeyboard(false);
 
 		client.connect(name, ip, port);
 		return client;
@@ -55,7 +55,7 @@ public class Example {
 
 		String event;
 		while(true) {
-			if((event = ServiceRMI.readKeyboard(false)).equals("end"))
+			if((event = Service.readKeyboard(false)).equals("end"))
 				break;
 			client.notifyEvent(event);
 		}

@@ -1,5 +1,6 @@
 fr.eve.client
 fr.eve.dao
 fr.eve.example
+fr.eve.rmi
 fr.eve.server
-fr.rmi
+fr.eve.utils

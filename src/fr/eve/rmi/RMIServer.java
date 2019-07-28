@@ -1,4 +1,4 @@
-package fr.rmi;
+package fr.eve.rmi;
 
 import java.net.InetAddress;
 import java.net.MalformedURLException;
@@ -11,11 +11,14 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 
+import fr.eve.utils.Logger;
+import fr.eve.utils.Service;
 
-/** The {@code ServerRMI} class is used to manage RMI servers.<br><br>
+
+/** The {@code RMIServer} class is used to manage RMI servers.<br><br>
  * This class extends {@code UnicastRemoteObject} class.
  */
-public abstract class ServerRMI extends UnicastRemoteObject{
+public abstract class RMIServer extends UnicastRemoteObject{
 	
 	private static final long serialVersionUID = 6863636390287094989L;
 
@@ -25,27 +28,28 @@ public abstract class ServerRMI extends UnicastRemoteObject{
 	
 	private String name, ip;
 	private int port;
+	private Logger logger;
+	
 	private Registry registry;
-	private boolean logStatus = true;
 	
 	/*************/
 	/** BUILDER **/
 	/*************/
 	
-	/** Builder of the {@code ServerRMI} class.
-	 * @param name - Server name.
+	/** Builder of the {@code RMIServer} class.
 	 * @param port - Server port.
+	 * @param name - Server name. 
 	 * @throws RemoteException if the registry could not be exported or contacted.
 	 * @throws UnknownHostException if the local host name could not be resolved into an address.
 	 */
-	public ServerRMI(String name, int port) throws UnknownHostException, RemoteException {
-		System.setProperty("java.security.policy", "file:rmi.policy");
-		if (System.getSecurityManager() == null)
-			System.setSecurityManager(new SecurityManager());
-		
+	public RMIServer(int port, String name) throws UnknownHostException, RemoteException {
+		super(port);
+		this.port = port;
 		this.name = name;
 		this.ip = InetAddress.getLocalHost().getHostAddress();
-		this.port = port;
+		this.logger = new Logger();
+		
+		System.setProperty("java.security.policy", "java.security.AllPermission");
 	}
 
 	/***********************/
@@ -70,17 +74,12 @@ public abstract class ServerRMI extends UnicastRemoteObject{
 	/** Get the server url.
 	 * @return Server url.
 	 */
-	public String getUrl() {return ServiceRMI.getUrl(name, ip, port);}
+	public String getUrl() {return Service.getUrl(name, ip, port);}
 
-	/** Get the server log status.
-	 * @return Server log status. {@code true} if logs are enabled, {@code false} if not.
+	/** Get the server logger.
+	 * @return Server logger.
 	 */
-	public boolean getLogStatus() {return logStatus;}
-	
-	/** Set the server log status.
-	 * @param logStatus - {@code true} to enable logs, {@code false} to disable it.
-	 */
-	public void setLogStatus(boolean logStatus) {this.logStatus = logStatus;}
+	public Logger getLogger() {return logger;}
 	
 	/*************/
 	/** METHODS **/
@@ -92,8 +91,8 @@ public abstract class ServerRMI extends UnicastRemoteObject{
 	 */
 	public void open() throws RemoteException, MalformedURLException {
 		registry = LocateRegistry.createRegistry(this.port);
-		Naming.rebind(ServiceRMI.getUrl(name, ip, port), this);
-		log("Server opened (Name : " + this.name + ", Ip : " + this.ip + ", Port : " +  this.port + ")");
+		Naming.rebind(Service.getUrl(name, ip, port), this);
+		logger.log("Server opened (Name : " + this.name + ", Ip : " + this.ip + ", Port : " +  this.port + ")");
 	}
 
 	/**
@@ -104,18 +103,6 @@ public abstract class ServerRMI extends UnicastRemoteObject{
 	public void close() throws AccessException, RemoteException, NotBoundException {
 		registry.unbind(this.name);
         UnicastRemoteObject.unexportObject(this, true);
-        log("Server closed");
-	}
-
-	/*********/
-	/** LOG **/
-	/*********/
-	
-	/** Display a log on the server console.
-	 * @param log - Message to display.
-	 */
-	public void log(String log) {
-		if(logStatus)
-			System.out.println(log);
+        logger.log("Server closed");
 	}
 }

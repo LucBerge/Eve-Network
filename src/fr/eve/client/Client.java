@@ -5,18 +5,17 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
-import java.rmi.Naming;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.server.ServerNotActiveException;
 import java.util.List;
 
 import fr.eve.dao.EventDAO;
+import fr.eve.rmi.RMIClient;
 import fr.eve.server.AlreadyConnectedException;
 import fr.eve.server.AlreadyDisconnectedException;
 import fr.eve.server.Event;
 import fr.eve.server.ServerInterface;
-import fr.rmi.ServiceRMI;
 
 /** The {@code Client} class is used to manage Eve clients.
  */
@@ -44,11 +43,7 @@ public class Client{
 	 * @throws IOException if an I/O error occurs.
 	 * @throws ClassNotFoundException if class of a serialized object cannot be found.
 	 */
-	public Client(String eventFileName, EventListener eventListener) throws ClassNotFoundException, IOException {
-		System.setProperty("java.security.policy", "file:rmi.policy");
-		if (System.getSecurityManager() == null)
-			System.setSecurityManager(new SecurityManager());
-		
+	public Client(String eventFileName, EventListener eventListener) throws ClassNotFoundException, IOException {		
 		this.eventFileName = eventFileName;
 		this.eventListener = eventListener;
 		this.lastEvent = new EventDAO(eventFileName).find();
@@ -102,7 +97,7 @@ public class Client{
 	 * @throws ServerNotActiveException if no remote method invocation is being processed in the current thread.
 	 */
 	public void connect(String name, String ip, int port) throws MalformedURLException, RemoteException, NotBoundException, AlreadyConnectedException, ServerNotActiveException {
-		server = (ServerInterface) Naming.lookup(ServiceRMI.getUrl(name, ip, port));	//Create server object
+		server = (ServerInterface) RMIClient.getInterface(ip, port, name);	//Get server object
 	}
 	
 	/** Get the initial file.
@@ -181,16 +176,16 @@ public class Client{
 		connected = true;
 		Thread listener = new Thread(new Runnable() {
 			public void run() {
-				try {
-					while(connected) {
+				while(connected) {
+					try {
 						for(Event event:server.getEvents(lastEvent)){
 							lastEvent = event;
 							if(!event.getAuthor().equals(ip))
 								eventListener.eventReceived(event.getEvent());
 						}
+					} catch (RemoteException | InterruptedException | ServerNotActiveException e) {
+						e.printStackTrace();
 					}
-				} catch (RemoteException | InterruptedException | ServerNotActiveException e) {
-					e.printStackTrace();
 				}
 			}
 		});
