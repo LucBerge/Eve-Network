@@ -37,7 +37,6 @@ public abstract class RMIServer extends UnicastRemoteObject{
 	/*************/
 	
 	/** Builder of the {@code RMIServer} class.
-	 * @param ip - Server ip. This is the public ip visible for the clients, {@code null} for local networks.
 	 * @param port - Server port.
 	 * @param name - Server name. 
 	 * @throws RemoteException if the registry could not be exported or contacted.

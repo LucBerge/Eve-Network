@@ -25,7 +25,7 @@ public class Logger {
 	/***********************/
 	
 	/** Set the current log status. 
-	 * @param {@code true} to allow log messages to be displayed, {@code false} otherwise.
+	 * @param logOn - {@code true} to allow log messages to be displayed, {@code false} otherwise.
 	 */
 	public void setLogOn(boolean logOn) {
 		this.logOn = logOn;
