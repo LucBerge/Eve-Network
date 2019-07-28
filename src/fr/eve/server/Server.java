@@ -14,12 +14,12 @@ import java.util.Properties;
 
 import fr.eve.dao.EventsDAO;
 import fr.eve.example.Example;
-import fr.rmi.ServerRMI;
+import fr.eve.rmi.RMIServer;
 
 /** The {@code Server} class is used to manage Eve servers.<br><br>
- * This class extends {@code ServerRMI} class.
+ * This class extends {@code RMIServer} class.
  */
-public class Server extends ServerRMI implements ServerInterface {
+public class Server extends RMIServer implements ServerInterface {
 	
 	public static void main(String args[]) {
 		try {	
@@ -28,12 +28,16 @@ public class Server extends ServerRMI implements ServerInterface {
 			else {
 				Properties properties = new Properties();
 				properties.load(new FileInputStream("server.properties"));
-				String name = properties.getProperty("name");
+				String ip = properties.getProperty("ip");
 				int port = Integer.parseInt(properties.getProperty("port"));
+				String name = properties.getProperty("name");
 				String initialFileName = properties.getProperty("initialFileName");
 				String eventFileName = properties.getProperty("eventFileName");
+
+				if(ip != null)
+					System.setProperty("java.rmi.server.hostname", ip);
 				
-				Server server = new Server(name, port, initialFileName, eventFileName);
+				Server server = new Server(port, name, initialFileName, eventFileName);
 				server.open();
 			}
 		} catch (Exception e) {
@@ -65,8 +69,8 @@ public class Server extends ServerRMI implements ServerInterface {
 	 * @throws IOException if an I/O error occurs.
 	 * @throws ClassNotFoundException if class of a serialized object cannot be found.
 	 */
-	public Server(String name, int port, String initialFileName, String eventFileName) throws ClassNotFoundException, IOException {
-		super(name, port);
+	public Server(int port, String name, String initialFileName, String eventFileName) throws ClassNotFoundException, IOException {
+		super(port, name);
 		this.eventFileName = eventFileName;
 		this.initialFiles = new ArrayList<String>();
 		
@@ -115,7 +119,7 @@ public class Server extends ServerRMI implements ServerInterface {
 
 			users.put(ip, ip);
 		}
-		log(ip + " joined the network.");
+		getLogger().log(ip + " joined the network.");
 		return ip;
 	}
 
@@ -161,7 +165,7 @@ public class Server extends ServerRMI implements ServerInterface {
 					users.get(user).notifyAll();
 				}
 			}
-			log(ip + " added \"" + e + "\".");
+			getLogger().log(ip + " added \"" + e + "\".");
 		}
 	}
 	
@@ -196,13 +200,13 @@ public class Server extends ServerRMI implements ServerInterface {
 				users.get(ip).notifyAll();
 			}
 			users.remove(ip);
-			log(ip + " disconnected.");
+			getLogger().log(ip + " disconnected.");
 			if(users.isEmpty()) {
 				try {
 					synchronized(events) {
 						new EventsDAO(this.eventFileName).update(events);
 					}
-					log("Events saved.");
+					getLogger().log("Events saved.");
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
